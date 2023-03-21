@@ -174,6 +174,9 @@ export class PlaygroundProject extends LitElement {
   @property({attribute: 'sandbox-base-url'})
   sandboxBaseUrl = `https://unpkg.com/playground-elements@${npmVersion}/`;
 
+  @property({ attribute: 'auto-refresh' })
+  autoRefresh = true;
+
   /**
    * The service worker scope to register on
    */
@@ -371,7 +374,7 @@ export class PlaygroundProject extends LitElement {
     this._modified = false;
     this.dispatchEvent(new FilesChangedEvent(true));
     /* eslint-disable @typescript-eslint/no-floating-promises */
-    this.save();
+    this.save(true);
     /* eslint-enable @typescript-eslint/no-floating-promises */
   }
 
@@ -557,7 +560,8 @@ export class PlaygroundProject extends LitElement {
   /**
    * Build this project immediately, cancelling any previous build.
    */
-  async save() {
+  async save(forceSave = false) {
+    if (!this.autoRefresh && !forceSave) return;
     this._build?.cancel();
     const build = new PlaygroundBuild(() => {
       this.dispatchEvent(new CustomEvent('diagnosticsChanged'));
@@ -661,14 +665,14 @@ export class PlaygroundProject extends LitElement {
    *
    * There is no meaning to when the returned promise resolves.
    */
-  async saveDebounced() {
+  async saveDebounced(forceSave = false) {
     if (this.savePending) {
       return;
     }
     this.savePending = true;
     await this.lastSave;
     this.savePending = false;
-    this.lastSave = this.save();
+    this.lastSave = this.save(forceSave);
   }
 
   isValidNewFilename(name: string): boolean {
