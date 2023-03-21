@@ -271,6 +271,9 @@ export class PlaygroundIde extends LitElement {
   @property({type: Boolean, attribute: 'no-completions'})
   noCompletions = false;
 
+  @property({ attribute: 'auto-refresh' })
+  autoRefresh = true;
+
   /**
    * Indicates whether the user has modified, added, or removed any project
    * files. Resets whenever a new project is loaded.
@@ -291,6 +294,11 @@ export class PlaygroundIde extends LitElement {
   private _configSetBeforeRender?: ProjectManifest;
   private _projectSrcSetBeforeRender?: string;
 
+  forceSave () {
+    /* eslint-disable @typescript-eslint/no-floating-promises */
+    this._project?.saveDebounced(true);
+  }
+
   override render() {
     const projectId = 'project';
     const editorId = 'editor';
@@ -299,9 +307,12 @@ export class PlaygroundIde extends LitElement {
         id=${projectId}
         .sandboxBaseUrl=${this.sandboxBaseUrl}
         .sandboxScope=${this.sandboxScope}
+        .autoRefresh=${this.autoRefresh}
       >
         <slot></slot>
       </playground-project>
+
+      <button @click=${this.forceSave}>save</button>
 
       <div id="lhs">
         <playground-tab-bar
